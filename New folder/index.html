@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AUTO INDUSTRY — Global Market Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&family=Barlow:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --surface: #111111;
+    --surface2: #181818;
+    --border: #2a2a2a;
+    --accent: #e8ff00;
+    --accent2: #ff4d00;
+    --accent3: #00d4ff;
+    --text: #f0f0f0;
+    --muted: #666;
+    --red: #ff3b3b;
+    --green: #39ff82;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Barlow', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background texture */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(ellipse at 10% 20%, rgba(232,255,0,0.04) 0%, transparent 50%),
+      radial-gradient(ellipse at 90% 80%, rgba(0,212,255,0.04) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 24px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 20px 0;
+    position: sticky;
+    top: 0;
+    background: rgba(10,10,10,0.95);
+    backdrop-filter: blur(12px);
+    z-index: 100;
+  }
+  .header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 4px;
+    color: var(--accent);
+  }
+  .logo span { color: var(--text); }
+  .header-meta {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    text-align: right;
+    line-height: 1.8;
+  }
+  .live-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--green);
+    border: 1px solid var(--green);
+    padding: 3px 10px;
+    border-radius: 2px;
+  }
+  .live-dot {
+    width: 6px; height: 6px;
+    background: var(--green);
+    border-radius: 50%;
+    animation: blink 1.4s ease-in-out infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+  /* Hero section */
+  .hero {
+    padding: 60px 0 40px;
+    border-bottom: 1px solid var(--border);
+  }
+  .hero-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--accent2);
+    margin-bottom: 16px;
+    text-transform: uppercase;
+  }
+  .hero-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(52px, 8vw, 110px);
+    line-height: 0.9;
+    letter-spacing: 2px;
+    margin-bottom: 24px;
+  }
+  .hero-title .highlight { color: var(--accent); }
+  .hero-desc {
+    font-size: 15px;
+    color: var(--muted);
+    font-weight: 300;
+    max-width: 500px;
+    line-height: 1.7;
+  }
+
+  /* KPI Strip */
+  .kpi-strip {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    border-bottom: 1px solid var(--border);
+  }
+  .kpi {
+    padding: 32px 28px;
+    border-right: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+    transition: background 0.3s;
+    cursor: default;
+  }
+  .kpi:last-child { border-right: none; }
+  .kpi:hover { background: var(--surface); }
+  .kpi::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--accent);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.4s ease;
+  }
+  .kpi:hover::after { transform: scaleX(1); }
+  .kpi-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .kpi-value {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 42px;
+    letter-spacing: 1px;
+    line-height: 1;
+    margin-bottom: 8px;
+    color: var(--text);
+  }
+  .kpi-change {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+  }
+  .up { color: var(--green); }
+  .down { color: var(--red); }
+
+  /* Main Grid */
+  .main-grid {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .left-col {
+    border-right: 1px solid var(--border);
+    padding: 40px 32px;
+  }
+  .right-col { padding: 40px 28px; }
+
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* Market Chart */
+  .chart-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 2px;
+    margin-bottom: 6px;
+  }
+  .chart-subtitle {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 28px;
+  }
+  .bar-chart {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .bar-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .bar-country {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    width: 24px;
+    text-align: center;
+  }
+  .bar-label {
+    font-size: 13px;
+    font-weight: 600;
+    width: 80px;
+    white-space: nowrap;
+  }
+  .bar-track {
+    flex: 1;
+    height: 28px;
+    background: var(--surface2);
+    border-radius: 2px;
+    overflow: hidden;
+    position: relative;
+  }
+  .bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding-right: 12px;
+    justify-content: flex-end;
+    transition: width 1.2s cubic-bezier(0.16,1,0.3,1);
+  }
+  .bar-fill span {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: rgba(0,0,0,0.8);
+    font-weight: 500;
+  }
+  .bar-unit {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    width: 60px;
+    text-align: right;
+  }
+
+  /* Segment donut */
+  .segment-chart {
+    margin: 0 auto 28px;
+    position: relative;
+    width: 180px;
+    height: 180px;
+  }
+  .segment-chart svg { transform: rotate(-90deg); }
+  .donut-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+  .donut-center-val {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 34px;
+    line-height: 1;
+    color: var(--accent);
+  }
+  .donut-center-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 1px;
+  }
+  .legend {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+  }
+  .legend-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .legend-dot {
+    width: 10px; height: 10px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+  .legend-name { color: var(--text); font-weight: 500; }
+  .legend-pct {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  /* Bottom section: EV trend + brand table */
+  .bottom-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-bottom: 1px solid var(--border);
+  }
+  .bottom-card {
+    padding: 36px 32px;
+    border-right: 1px solid var(--border);
+  }
+  .bottom-card:last-child { border-right: none; }
+
+  /* Sparkline */
+  .ev-trend {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    height: 100px;
+    margin: 24px 0 16px;
+  }
+  .ev-bar {
+    flex: 1;
+    border-radius: 2px 2px 0 0;
+    position: relative;
+    transition: opacity 0.3s;
+    cursor: default;
+  }
+  .ev-bar:hover { opacity: 0.85; }
+  .ev-bar-label {
+    position: absolute;
+    bottom: -22px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  .ev-bar-tip {
+    position: absolute;
+    top: -24px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    color: var(--accent);
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .ev-bar:hover .ev-bar-tip { opacity: 1; }
+  .ev-axis {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 30px;
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    color: var(--muted);
+  }
+
+  /* Brand table */
+  .brand-table { width: 100%; border-collapse: collapse; }
+  .brand-table th {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-align: left;
+    padding: 0 0 12px;
+    border-bottom: 1px solid var(--border);
+    text-transform: uppercase;
+  }
+  .brand-table td {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .brand-table tr:last-child td { border-bottom: none; }
+  .brand-rank {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    width: 28px;
+  }
+  .brand-name { font-weight: 600; }
+  .brand-country {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+  }
+  .brand-sales {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    text-align: right;
+  }
+  .brand-share {
+    width: 80px;
+    padding-left: 16px !important;
+  }
+  .share-bar {
+    height: 4px;
+    background: var(--surface2);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 4px;
+  }
+  .share-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: var(--accent);
+  }
+
+  /* Footer */
+  footer {
+    padding: 24px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .footer-text {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+  }
+  .footer-tag {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 16px;
+    letter-spacing: 3px;
+    color: var(--border);
+  }
+
+  /* Animations */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .kpi { animation: fadeUp 0.6s ease both; }
+  .kpi:nth-child(1) { animation-delay: 0.1s; }
+  .kpi:nth-child(2) { animation-delay: 0.2s; }
+  .kpi:nth-child(3) { animation-delay: 0.3s; }
+  .kpi:nth-child(4) { animation-delay: 0.4s; }
+
+  @media (max-width: 900px) {
+    .kpi-strip { grid-template-columns: 1fr 1fr; }
+    .kpi:nth-child(2) { border-right: none; }
+    .kpi:nth-child(3) { border-top: 1px solid var(--border); }
+    .main-grid { grid-template-columns: 1fr; }
+    .left-col { border-right: none; border-bottom: 1px solid var(--border); }
+    .bottom-grid { grid-template-columns: 1fr; }
+    .bottom-card { border-right: none; border-bottom: 1px solid var(--border); }
+  }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<header>
+  <div class="container">
+    <div class="header-inner">
+      <div class="logo">AUTO<span>INTEL</span></div>
+      <div style="display:flex;align-items:center;gap:24px;">
+        <div class="live-badge"><div class="live-dot"></div>LIVE DATA</div>
+        <div class="header-meta">Global Automotive Dashboard<br>FY 2024 — Q4 Report</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Hero -->
+<div class="container">
+  <section class="hero">
+    <div class="hero-label">// Global Market Overview</div>
+    <h1 class="hero-title">
+      AUTO<br>
+      <span class="highlight">INDUSTRY</span><br>
+      DASHBOARD
+    </h1>
+    <p class="hero-desc">Comprehensive market intelligence across production, sales, and electrification trends shaping the global automotive landscape in 2024.</p>
+  </section>
+</div>
+
+<!-- KPI Strip -->
+<div class="container">
+  <div class="kpi-strip">
+    <div class="kpi">
+      <div class="kpi-label">// Global Sales Volume</div>
+      <div class="kpi-value">89.4M</div>
+      <div class="kpi-change up">▲ +3.2% YoY · Units sold worldwide</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">// EV Market Share</div>
+      <div class="kpi-value">18.4%</div>
+      <div class="kpi-change up">▲ +5.1pp from 13.3% in 2023</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">// Market Cap (Top 10)</div>
+      <div class="kpi-value">$2.1T</div>
+      <div class="kpi-change down">▼ −4.7% Market correction</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">// Global R&amp;D Spend</div>
+      <div class="kpi-value">$168B</div>
+      <div class="kpi-change up">▲ +11.3% EV &amp; autonomy focus</div>
+    </div>
+  </div>
+</div>
+
+<!-- Main Grid -->
+<div class="container">
+  <div class="main-grid">
+    <!-- Bar Chart -->
+    <div class="left-col">
+      <div class="section-label">PRODUCTION BY COUNTRY</div>
+      <div class="chart-title">Top Markets — Vehicle Output</div>
+      <div class="chart-subtitle">Annual production in millions of units, 2024 estimates</div>
+      <div class="bar-chart" id="barChart"></div>
+    </div>
+
+    <!-- Donut -->
+    <div class="right-col">
+      <div class="section-label">MARKET SEGMENTS</div>
+      <div class="segment-chart">
+        <svg width="180" height="180" viewBox="0 0 180 180">
+          <circle cx="90" cy="90" r="70" fill="none" stroke="#181818" stroke-width="28"/>
+          <!-- SUV/Crossover 42% -->
+          <circle cx="90" cy="90" r="70" fill="none" stroke="#e8ff00" stroke-width="28"
+            stroke-dasharray="184.7 254.5" stroke-dashoffset="0"/>
+          <!-- Sedan 24% -->
+          <circle cx="90" cy="90" r="70" fill="none" stroke="#ff4d00" stroke-width="28"
+            stroke-dasharray="105.6 333.6" stroke-dashoffset="-184.7"/>
+          <!-- Pickup 14% -->
+          <circle cx="90" cy="90" r="70" fill="none" stroke="#00d4ff" stroke-width="28"
+            stroke-dasharray="61.6 377.6" stroke-dashoffset="-290.3"/>
+          <!-- Hatch 11% -->
+          <circle cx="90" cy="90" r="70" fill="none" stroke="#ff3b3b" stroke-width="28"
+            stroke-dasharray="48.4 390.8" stroke-dashoffset="-351.9"/>
+          <!-- Other 9% -->
+          <circle cx="90" cy="90" r="70" fill="none" stroke="#444" stroke-width="28"
+            stroke-dasharray="39.6 399.6" stroke-dashoffset="-400.3"/>
+        </svg>
+        <div class="donut-center">
+          <div class="donut-center-val">42%</div>
+          <div class="donut-center-label">SUV LEADER</div>
+        </div>
+      </div>
+      <div class="legend">
+        <div class="legend-item">
+          <div class="legend-left"><div class="legend-dot" style="background:#e8ff00"></div><span class="legend-name">SUV / Crossover</span></div>
+          <span class="legend-pct">42%</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-left"><div class="legend-dot" style="background:#ff4d00"></div><span class="legend-name">Sedan</span></div>
+          <span class="legend-pct">24%</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-left"><div class="legend-dot" style="background:#00d4ff"></div><span class="legend-name">Pickup Truck</span></div>
+          <span class="legend-pct">14%</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-left"><div class="legend-dot" style="background:#ff3b3b"></div><span class="legend-name">Hatchback</span></div>
+          <span class="legend-pct">11%</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-left"><div class="legend-dot" style="background:#444"></div><span class="legend-name">Other</span></div>
+          <span class="legend-pct">9%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bottom Grid -->
+<div class="container">
+  <div class="bottom-grid">
+    <!-- EV trend -->
+    <div class="bottom-card">
+      <div class="section-label">EV ADOPTION TREND</div>
+      <div class="chart-title">Electric Vehicle Sales Growth</div>
+      <div class="chart-subtitle">Global EV units sold (millions), 2018–2024</div>
+      <div class="ev-trend" id="evTrend"></div>
+      <div class="ev-axis">
+        <span>2018</span><span>2019</span><span>2020</span><span>2021</span><span>2022</span><span>2023</span><span>2024</span>
+      </div>
+      <div style="margin-top:24px;display:flex;gap:24px;">
+        <div>
+          <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:2px;margin-bottom:4px;">2024 TOTAL</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--accent);">16.4M</div>
+        </div>
+        <div>
+          <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:2px;margin-bottom:4px;">CAGR 2018–24</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--green);">+61%</div>
+        </div>
+        <div>
+          <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:2px;margin-bottom:4px;">LEADING MARKET</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--accent3);">CHINA</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Brand table -->
+    <div class="bottom-card">
+      <div class="section-label">TOP AUTOMAKERS BY SALES</div>
+      <div class="chart-title">Global Brand Rankings 2024</div>
+      <div class="chart-subtitle">Total unit sales and global market share</div>
+      <br>
+      <table class="brand-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Brand</th>
+            <th>HQ</th>
+            <th style="text-align:right">Units (M)</th>
+            <th class="brand-share">Share</th>
+          </tr>
+        </thead>
+        <tbody id="brandTable"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Footer -->
+<div class="container">
+  <footer>
+    <div class="footer-text">Data sourced from OICA, IEA, Bloomberg NEF · 2024 estimates · For portfolio use</div>
+    <div class="footer-tag">AUTOINTEL © 2024</div>
+  </footer>
+</div>
+
+<script>
+// Bar chart data
+const countries = [
+  { name: 'China',   flag: '🇨🇳', units: '31.3M', pct: 100, color: '#e8ff00' },
+  { name: 'USA',     flag: '🇺🇸', units: '15.9M', pct: 51,  color: '#ff4d00' },
+  { name: 'Japan',   flag: '🇯🇵', units: '7.8M',  pct: 25,  color: '#00d4ff' },
+  { name: 'Germany', flag: '🇩🇪', units: '4.1M',  pct: 13,  color: '#ff3b3b' },
+  { name: 'India',   flag: '🇮🇳', units: '4.9M',  pct: 16,  color: '#39ff82' },
+  { name: 'S. Korea',flag: '🇰🇷', units: '3.5M',  pct: 11,  color: '#a78bfa' },
+];
+
+const chart = document.getElementById('barChart');
+countries.forEach(c => {
+  chart.innerHTML += `
+    <div class="bar-row">
+      <div class="bar-country">${c.flag}</div>
+      <div class="bar-label">${c.name}</div>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:${c.pct}%;background:${c.color};">
+          <span>${c.units}</span>
+        </div>
+      </div>
+    </div>`;
+});
+
+// EV Trend
+const evData = [
+  { year: '2018', val: 1.1 },
+  { year: '2019', val: 2.1 },
+  { year: '2020', val: 3.0 },
+  { year: '2021', val: 6.6 },
+  { year: '2022', val: 10.5 },
+  { year: '2023', val: 14.2 },
+  { year: '2024', val: 16.4 },
+];
+const maxEV = 16.4;
+const evContainer = document.getElementById('evTrend');
+evData.forEach((d, i) => {
+  const heightPct = (d.val / maxEV) * 100;
+  const isLast = i === evData.length - 1;
+  evContainer.innerHTML += `
+    <div class="ev-bar" style="height:${heightPct}%;background:${isLast ? '#e8ff00' : 'rgba(232,255,0,0.3)'}">
+      <div class="ev-bar-tip">${d.val}M</div>
+      <div class="ev-bar-label">${d.year}</div>
+    </div>`;
+});
+
+// Brand Table
+const brands = [
+  { rank:1, name:'Toyota',        hq:'Japan',  units:'11.3', share:12.6 },
+  { rank:2, name:'Volkswagen',    hq:'Germany',units:'9.2',  share:10.3 },
+  { rank:3, name:'Stellantis',    hq:'USA/EU', units:'6.5',  share:7.3  },
+  { rank:4, name:'Hyundai/Kia',   hq:'S.Korea',units:'7.3',  share:8.2  },
+  { rank:5, name:'GM',            hq:'USA',    units:'6.2',  share:6.9  },
+  { rank:6, name:'Ford',          hq:'USA',    units:'4.4',  share:4.9  },
+  { rank:7, name:'BYD',           hq:'China',  units:'4.3',  share:4.8  },
+];
+const tbody = document.getElementById('brandTable');
+brands.forEach(b => {
+  const barW = (b.share / 12.6) * 100;
+  tbody.innerHTML += `
+    <tr>
+      <td class="brand-rank">${b.rank}</td>
+      <td class="brand-name">${b.name}</td>
+      <td class="brand-country">${b.hq}</td>
+      <td class="brand-sales">${b.units}M</td>
+      <td class="brand-share">
+        <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted)">${b.share}%</div>
+        <div class="share-bar"><div class="share-fill" style="width:${barW}%"></div></div>
+      </td>
+    </tr>`;
+});
+</script>
+</body>
+</html>
